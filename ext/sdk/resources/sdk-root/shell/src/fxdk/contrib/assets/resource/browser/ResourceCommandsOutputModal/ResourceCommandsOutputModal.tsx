@@ -40,7 +40,7 @@ export const ResourceCommandsOutputModal = observer(function ResourceCommandsOut
     <Modal fullWidth onClose={onClose}>
       <div className={s.root}>
         <div className="modal-header">
-          Resource {resourceName} commands outputs
+          Resource commands outputs ({resourceName})
         </div>
 
         <div className="modal-label">
