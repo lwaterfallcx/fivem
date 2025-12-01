@@ -210,6 +210,23 @@ export class ResourceAssetRuntime extends AssetRuntime<ResourceAssetConfig> {
     this.ensureWatchCommandsRunning();
   }
 
+  async handleFsEntryChanged(entryPath) {
+    const { enabled, restartOnChange } = this.getConfig();
+    if (enabled && restartOnChange) {
+      const isRestartInducingPath = Object.values(this.restartInducingPatterns)
+        .some((pattern) => pattern.match(entryPath));
+
+      if (isRestartInducingPath) {
+        this.gameServerService.restartResource(this.getName());
+      }
+    }
+  }
+
+  // listen for files being created (C# script files use the built .dlls which may be deleted/created)
+  async acceptNestedFsEntrySpawned(event: ProjectFsEvents.FsEntrySpawnedEvent) {
+    this.handleFsEntryChanged(event.entryPath);
+  }
+
   async acceptNestedFsEntryUpdated(event: ProjectFsEvents.FsEntryUpdatedEvent) {
     if (this.manifestPath === event.entryPath) {
       this.loadMetaData();
@@ -221,15 +238,7 @@ export class ResourceAssetRuntime extends AssetRuntime<ResourceAssetConfig> {
       return;
     }
 
-    const { enabled, restartOnChange } = this.getConfig();
-    if (enabled && restartOnChange) {
-      const isRestartInducingPath = Object.values(this.restartInducingPatterns)
-        .some((pattern) => pattern.match(event.entryPath));
-
-      if (isRestartInducingPath) {
-        this.gameServerService.restartResource(this.getName());
-      }
-    }
+    this.handleFsEntryChanged(event.entryPath);
   }
 
   async dispose() {

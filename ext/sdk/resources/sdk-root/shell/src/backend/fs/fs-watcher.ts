@@ -151,6 +151,12 @@ export class FsWatcher implements IDisposableObject {
         continue;
       }
 
+      // DELETED -> CREATED in one batch - mark as modified
+      if (action === FsWatcherEventType.CREATED && event[0] === FsWatcherEventType.DELETED) {
+        eventForPath[fromEntryPath] = [FsWatcherEventType.MODIFIED, fromEntryPath];
+        continue;
+      }
+
       // MODIFIED|RENAMED -> DELETED in one batch - only keep deleted
       if (action === FsWatcherEventType.DELETED && event[0] > FsWatcherEventType.DELETED) {
         eventForPath[fromEntryPath] = [action, fromEntryPath];
